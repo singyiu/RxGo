@@ -401,7 +401,7 @@ func Test_Observable_Debounce(t *testing.T) {
 func Test_Observable_DebounceWithKeyMap(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
-	numToStrFunc := func(i interface{})(string,error) {
+	numToStrFunc := func(i interface{}) (string, error) {
 		v, ok := i.(int)
 		if !ok {
 			return "", errors.New("not int")

@@ -706,7 +706,7 @@ func (o *ObservableImpl) Debounce(timespan Duration, opts ...Option) Observable 
 }
 
 // Debounce only emits an item with a specific key from an Observable if a particular timespan has passed without it emitting another item having the same key.
-func (o *ObservableImpl) DebounceWithKeyMap(itemValueToKeyFunc func(interface{})(string,error), timespan Duration, opts ...Option) Observable {
+func (o *ObservableImpl) DebounceWithKeyMap(itemValueToKeyFunc func(interface{}) (string, error), timespan Duration, opts ...Option) Observable {
 	f := func(ctx context.Context, next chan Item, option Option, opts ...Option) {
 		defer close(next)
 		observe := o.Observe(opts...)
