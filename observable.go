@@ -30,6 +30,7 @@ type Observable interface {
 	Contains(equal Predicate, opts ...Option) Single
 	Count(opts ...Option) Single
 	Debounce(timespan Duration, opts ...Option) Observable
+	DebounceWithKeyMap(itemValueToKeyFunc func(interface{}) (string, error), timespan Duration, opts ...Option) Observable
 	DefaultIfEmpty(defaultValue interface{}, opts ...Option) Observable
 	Distinct(apply Func, opts ...Option) Observable
 	DistinctUntilChanged(apply Func, opts ...Option) Observable
