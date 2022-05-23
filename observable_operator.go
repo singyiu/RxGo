@@ -737,6 +737,10 @@ func (o *ObservableImpl) DebounceWithKeyMap(itemValueToKeyFunc func(interface{})
 							return
 						}
 					} else {
+						if lastV:=latestKeyMap[keyStr]; lastV != nil {
+							logStr := `{"caller": "DebounceWithKeyMap", "key": "` + keyStr + `"}`
+							fmt.Printf("%s\n", logStr)
+						}
 						mutex.Lock()
 						latestKeyMap[keyStr] = item.V
 						mutex.Unlock()
