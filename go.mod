@@ -1,4 +1,4 @@
-module github.com/singyiu/rxgo
+module github.com/singyiu/rxgo/v2
 
 go 1.13
 
