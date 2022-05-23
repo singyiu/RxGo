@@ -705,6 +705,61 @@ func (o *ObservableImpl) Debounce(timespan Duration, opts ...Option) Observable 
 	return customObservableOperator(o.parent, f, opts...)
 }
 
+// Debounce only emits an item with a specific key from an Observable if a particular timespan has passed without it emitting another item having the same key.
+func (o *ObservableImpl) DebounceWithKeyMap(itemValueToKeyFunc func(interface{})(string,error), timespan Duration, opts ...Option) Observable {
+	f := func(ctx context.Context, next chan Item, option Option, opts ...Option) {
+		defer close(next)
+		observe := o.Observe(opts...)
+		latestKeyMap := make(map[string]interface{})
+		mutex := sync.Mutex{}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case item, ok := <-observe:
+				if !ok {
+					return
+				}
+				if item.Error() {
+					if !item.SendContext(ctx, next) {
+						return
+					}
+					if option.getErrorStrategy() == StopOnError {
+						return
+					}
+				} else {
+					keyStr, err := itemValueToKeyFunc(item.V)
+					if err != nil {
+						//simply skip the debounce if the keyStr is not available
+						if !Of(item.V).SendContext(ctx, next) {
+							return
+						}
+					} else {
+						mutex.Lock()
+						latestKeyMap[keyStr] = item.V
+						mutex.Unlock()
+					}
+				}
+			case <-time.After(timespan.duration()):
+				for k, v := range latestKeyMap {
+					fmt.Printf("key: %s, value: %v\n", k, v) //!!!
+					if v != nil {
+						if !Of(v).SendContext(ctx, next) {
+							return
+						}
+						mutex.Lock()
+						latestKeyMap[k] = nil
+						mutex.Unlock()
+					}
+				}
+			}
+		}
+	}
+
+	return customObservableOperator(o.parent, f, opts...)
+}
+
 // DefaultIfEmpty returns an Observable that emits the items emitted by the source
 // Observable or a specified default item if the source Observable is empty.
 func (o *ObservableImpl) DefaultIfEmpty(defaultValue interface{}, opts ...Option) Observable {
