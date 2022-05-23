@@ -732,6 +732,7 @@ func (o *ObservableImpl) DebounceWithKeyMap(itemValueToKeyFunc func(interface{})
 					keyStr, err := itemValueToKeyFunc(item.V)
 					if err != nil {
 						//simply skip the debounce if the keyStr is not available
+						fmt.Printf("itemValueToKeyFunc error: %v\n", err)
 						if !Of(item.V).SendContext(ctx, next) {
 							return
 						}
@@ -743,13 +744,12 @@ func (o *ObservableImpl) DebounceWithKeyMap(itemValueToKeyFunc func(interface{})
 				}
 			case <-time.After(timespan.duration()):
 				for k, v := range latestKeyMap {
-					fmt.Printf("key: %s, value: %v\n", k, v) //!!!
 					if v != nil {
 						if !Of(v).SendContext(ctx, next) {
 							return
 						}
 						mutex.Lock()
-						latestKeyMap[k] = nil
+						delete(latestKeyMap, k)
 						mutex.Unlock()
 					}
 				}

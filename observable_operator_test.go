@@ -388,6 +388,36 @@ func Test_Observable_Count_Parallel(t *testing.T) {
 //	Assert(ctx, t, obs.Debounce(d, WithBufferedChannel(10), WithContext(ctx)),
 //		HasItems(1, 2, 5, 6))
 //}
+func Test_Observable_Debounce(t *testing.T) {
+	defer goleak.VerifyNone(t)
+	ctx, obs, d := timeCausality(1, tick, 2, tick, 3, 4, 5, tick, 6, tick)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	obj := obs.Debounce(d, WithBufferedChannel(10), WithContext(ctx))
+	Assert(ctx, t, obj,
+		HasItems(1, 2, 5, 6))
+}
+
+func Test_Observable_DebounceWithKeyMap(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	numToStrFunc := func(i interface{})(string,error) {
+		v, ok := i.(int)
+		if !ok {
+			return "", errors.New("not int")
+		}
+		return strconv.Itoa(v), nil
+	}
+
+	ctx, obs, d := timeCausality(1, tick, 2, tick, 3, 4, 5, tick, 6, tick)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	Assert(ctx, t, obs.DebounceWithKeyMap(numToStrFunc, d, WithBufferedChannel(10), WithContext(ctx)),
+		HasItemsNoOrder(1, 2, 3, 4, 5, 6))
+	ctx, obs, d = timeCausality(1, tick, 1, tick, 2, 2, 2, tick, 3, tick)
+	Assert(ctx, t, obs.DebounceWithKeyMap(numToStrFunc, d, WithBufferedChannel(10), WithContext(ctx)),
+		HasItemsNoOrder(1, 2, 3))
+}
 
 func Test_Observable_Debounce_Error(t *testing.T) {
 	defer goleak.VerifyNone(t)
