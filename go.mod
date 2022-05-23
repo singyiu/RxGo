@@ -1,4 +1,4 @@
-module github.com/reactivex/rxgo/v2
+module github.com/singyiu/rxgo
 
 go 1.13
 
